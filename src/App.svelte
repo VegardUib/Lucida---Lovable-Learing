@@ -3,7 +3,7 @@
   import { routes } from './routes';
   import { writable } from 'svelte/store';
   import './global.css';
-  // import './styles/app.css';
+  import './styles/app.css';
 
   const leftMenuOpen = writable(false);
   const rightMenuOpen = writable(false);

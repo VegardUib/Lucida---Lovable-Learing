@@ -12,30 +12,30 @@
 	import '@skeletonlabs/skeleton/themes/theme-skeleton.css';
 	import '@skeletonlabs/skeleton/styles/all.css';
 	import '../app.postcss';
+	import '../styles/app.css'
 
-	function drawerOpen(): void {
-		drawerStore.open({});
+	function toggleSidebar(side: string) {
+		if (side === "left") {
+			classesSidebarLeft = classesSidebarLeft.includes("w-0") ? "w-64" : "w-0";
+		} else if (side === "right") {
+			classesSidebarRight = classesSidebarRight.includes("w-0") ? "w-64" : "w-0";
+		}
 	}
 
 	// Reactive Properties
 	$: classesSidebarLeft = $page.url.pathname === '/' ? 'w-0' : 'w-0 lg:w-64';
+	$: classesSidebarRight = $page.url.pathname === '/about' ? 'w-0' : 'w-0 lg:w-64';
 </script>
+
 <!-- App Shell -->
-<!-- App Shell -->
-<AppShell slotSidebarLeft="bg-surface-500/5 {classesSidebarLeft}" slotSidebarRight="bg-surface-500/5 w-0 md:w-64">
+<AppShell slotSidebarLeft="bg-surface-500/5 {classesSidebarLeft}" slotSidebarRight="bg-surface-500/5 {classesSidebarRight}">
 	<svelte:fragment slot="header">
-	  <!-- Drawer -->
-	  <Drawer>
-		<h2 class="p-4">Navigation</h2>
-		<hr />
-		<Navigation />
-	  </Drawer>    
 	  <!-- App Bar -->
 	  <AppBar>
 		<svelte:fragment slot="lead">
 		  <div class="flex items-center">
-			<button class="lg:hidden btn btn-sm mr-4" on:click={drawerOpen}>
-			  <span>
+			<button class="lg:hidden btn btn-sm mr-4" on:click={() => toggleSidebar("left")}>
+				<span>
 				<svg viewBox="0 0 100 80" class="fill-token w-4 h-4">
 				  <rect width="100" height="20" />
 				  <rect y="30" width="100" height="20" />
@@ -47,8 +47,12 @@
 		  </div>
 		</svelte:fragment>
 		<svelte:fragment slot="trail">
-		  <a class="btn btn-sm" href="/">Home</a>
-		  <a class="btn btn-sm" href="/about">About</a>
+		  <button class="btn btn-sm" on:click={() => toggleSidebar("right")}>
+			<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#000000" fill="none" stroke-linecap="round" stroke-linejoin="round">
+			  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+			  <polyline points="15 6 9 12 15 18" />
+			</svg>
+		  </button>
 		</svelte:fragment>
 	  </AppBar>
 	</svelte:fragment>
@@ -64,9 +68,8 @@
 	<slot />
 	<!-- Footer -->
 	<svelte:fragment slot="footer">
-		<div class="px-4 py-2">
-	  		<p>Footer</p>
-		</div>
+	  <div class="px-4 py-2">
+		<p>Footer</p>
+	  </div>
 	</svelte:fragment>
-  </AppShell>
-  
+</AppShell>
