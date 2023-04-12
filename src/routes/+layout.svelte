@@ -43,7 +43,7 @@
 				</svg>
 			  </span>
 			</button>
-			<strong class="text-xl uppercase">Skeleton</strong>
+			<strong class="text-xl uppercase">Protolett</strong>
 		  </div>
 		</svelte:fragment>
 		<svelte:fragment slot="trail">
@@ -58,13 +58,15 @@
 	</svelte:fragment>
 	<!-- Right Sidebar Slot -->
 	<svelte:fragment slot="sidebarRight">
-	  <h2 class="p-4">Right Sidebar</h2>
+	  <Navigation />
 	</svelte:fragment>
 	<!-- Page Route Content -->
 	<slot />
 	<!-- Footer -->
 	<svelte:fragment slot="footer">
-	  <h2 class="p-4">Footer</h2>
+		<div class="px-4 py-2">
+	  		<p>Footer</p>
+		</div>
 	</svelte:fragment>
   </AppShell>
   
