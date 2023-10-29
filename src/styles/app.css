@@ -1,3 +1,7 @@
 .prose {
+    font-size: 14px;
     font-family: Georgia, 'Times New Roman', Times, serif;
+    column-width: 30ch; /* Justerer kolonnebredden for å holde omtrent 65 tegn per linje */
+    column-gap: 2rem; /* Legger til mellomrom mellom kolonnene */
+    max-width: 100%; /* For å være sikker på at artikkelens bredde ikke overstiger forelderens bredde */
   }

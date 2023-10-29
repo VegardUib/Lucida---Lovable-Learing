@@ -1,7 +1,7 @@
 <script>
   import { onMount, onDestroy, afterUpdate } from 'svelte';
   let isSSR = import.meta.env.SSR;
-  let articleContent = '';
+  let articleContent =  '';
 
   onMount(async () => {
     if (isSSR) return;
