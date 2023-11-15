@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 
+	
 	// Skeleton Features
 	import { AppShell, AppBar } from '@skeletonlabs/skeleton';
 	import { Drawer, drawerStore } from '@skeletonlabs/skeleton';
@@ -14,6 +15,10 @@
 	import '../app.postcss';
 	import '../styles/app.css'
 
+	function drawerClose(): void {
+		drawerStore.close();
+	}
+
 	function toggleSidebar(side: string) {
 		if (side === "left") {
 			classesSidebarLeft = classesSidebarLeft.includes("w-0") ? "w-64" : "w-0";
@@ -24,7 +29,8 @@
 
 	// Reactive Properties
 	$: classesSidebarLeft = $page.url.pathname === '/' ? 'w-0' : 'w-0 lg:w-64';
-	$: classesSidebarRight = $page.url.pathname === '/about' ? 'w-0' : 'w-0 lg:w-64';
+	$: classesSidebarRight = $page.url.pathname === '/desk' ? 'w-0' : 'w-0 lg:w-64';
+	
 </script>
 
 <!-- App Shell -->
@@ -34,7 +40,7 @@
 	  <AppBar>
 		<svelte:fragment slot="lead">
 		  <div class="flex items-center">
-			<button class="lg:hidden btn btn-sm mr-4" on:click={() => toggleSidebar("left")}>
+			<button class="lg: btn btn-sm mr-4" on:click={() => toggleSidebar("left")}> <!--class="hidden" //-->
 				<span>
 				<svg viewBox="0 0 100 80" class="fill-token w-4 h-4">
 				  <rect width="100" height="20" />
@@ -43,7 +49,7 @@
 				</svg>
 			  </span>
 			</button>
-			<strong class="text-xl uppercase">Protolett</strong>
+			<strong class="text-xl uppercase">Lucida</strong>
 		  </div>
 		</svelte:fragment>
 		<svelte:fragment slot="trail">
@@ -53,6 +59,7 @@
 			  <polyline points="15 6 9 12 15 18" />
 			</svg>
 		  </button>
+		  
 		</svelte:fragment>
 	  </AppBar>
 	</svelte:fragment>
@@ -67,9 +74,16 @@
 	<!-- Page Route Content -->
 	<slot />
 	<!-- Footer -->
+
 	<svelte:fragment slot="footer">
-	  <div class="px-4 py-2">
-		<p>Footer</p>
-	  </div>
+	<div class="px-4 py-2">
+<!--		<p>Footer</p>		
+-->
+	<nav class="list-nav p-4">
+		<ul>
+			<li><a href="/mypage">Min side</a></li>
+			<li><a href="/logout">Logg ut</a></li>
+		</ul>
+	</nav>
 	</svelte:fragment>
 </AppShell>
