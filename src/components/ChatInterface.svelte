@@ -1,11 +1,11 @@
-<script>
+<script type="ts">
     import { onMount, afterUpdate } from 'svelte';
     // import type { MediaRecorder } from 'types/dom-mediacapture-record';
 
     let apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-    let conversationBox;
-    let mediaRecorder;
-    let audioChunks = [];
+    let conversationBox : any;
+    let mediaRecorder : any;
+    let audioChunks : any[] = [];
 
     function updateUserInputPlaceholder() {
         userInputPlaceholder = getRandomProcessingMessage();
@@ -30,7 +30,7 @@
 
     
     let messages = [
-        {role: "system", content: "You are a helpful assistant for a ten-year-old pupil. Your name is Lexi, and your avatar is a cute and playful cat. Try to keep the conversation going at all times, and engage the user."}
+        {role: "system", content: "Du er en hjelpsom, norsk skole-assistent for en ti år gammel elev. Du heter Lucy, og avataren din en en søt og leken katt. Prøv å holde samtalen gående til enhver tid, og engasjer og motiver brukeren."}
     ];
 
     let userInput = "";
@@ -49,7 +49,7 @@
 
             let options = {};
             // Check for browser support for the desired MIME type
-            const desiredMimeType = 'audio/wav';
+            const desiredMimeType = 'audio/webm';
             if (MediaRecorder.isTypeSupported(desiredMimeType)) {
                 options = { mimeType: desiredMimeType };
             } else {
@@ -98,7 +98,7 @@
         try {
             const formData = new FormData();
             formData.append('model', 'whisper-1');
-            // formData.append('language', 'no');
+            formData.append('language', 'no');
             // formData.append('language', 'en');
             formData.append('file', new Blob([audioBuffer], { type: 'audio/wav' }));
 
@@ -118,6 +118,8 @@
             if (transcribedText && transcribedText.trim() !== "") {
                 userInput = transcribedText;
                 console.log("Transcribed Text:", transcribedText);
+                isRecording = false;
+                isProcessing = true;
                 interactWithAI();
             } else {
                 console.warn("User input is empty or undefined after transcription.");
@@ -240,16 +242,21 @@
             </div>
         {/each}
     </div>
+    
     <textarea 
         bind:value={userInput} 
         placeholder= {isProcessing ? currentProcessingMessage : "Du kan skrive her..."}
         on:blur={updateUserInputPlaceholder}
         on:keydown={handleUserMessageKeydown}
     ></textarea>
-    <button class="send" on:click={interactWithAI} disabled={isProcessing}>
-        {isProcessing ? "Sender..." : "Send melding"}
-    </button>
-    <button class="record" on:mousedown={startRecording} on:mouseup={stopRecording}>Hold for å snakke</button>
+    <div class="buttons">
+        <button class="send" on:click={interactWithAI} disabled={isProcessing}>
+            {isProcessing ? "Sender..." : "Send melding"}
+        </button>
+        <button class="record" on:mousedown={startRecording} on:mouseup={stopRecording}>
+            {isRecording ? "Lytter… bare snakk." : "Hold for å snakke"}
+        </button>
+    </div>
 
 </div>
 
@@ -262,11 +269,17 @@
         margin: 1em auto;
         border: 0px solid #ddd;
         border-radius: .5em;
+
+        
+    }
+
+    .buttons {
+
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
+        justify-content: space-between;
         flex-wrap: wrap;
         align-items: flex-start;
-        
     }
 
     textarea {

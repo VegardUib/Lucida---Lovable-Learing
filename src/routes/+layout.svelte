@@ -74,11 +74,11 @@
 	<!-- Page Route Content -->
 	<slot />
 	<!-- Footer -->
-
+<!--
 	<svelte:fragment slot="footer">
 	<div class="px-4 py-2">
-<!--		<p>Footer</p>		
--->
+		<p>Footer</p>		
+
 	<nav class="list-nav p-4">
 		<ul>
 			<li><a href="/mypage">Min side</a></li>
@@ -86,4 +86,5 @@
 		</ul>
 	</nav>
 	</svelte:fragment>
-</AppShell>
+-->
+	</AppShell>

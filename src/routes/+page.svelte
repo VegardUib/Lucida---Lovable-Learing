@@ -1,6 +1,7 @@
-<script>
-    import Article from '../components/Article.svelte';
-</script>
 <div class="container p-10 space-y-4">
-	<Article />
+	<h1>Hjem</h1>
+	<hr />
+	<p>
+		Her kommer dæsjbordet vårt.
+	</p>
 </div>
