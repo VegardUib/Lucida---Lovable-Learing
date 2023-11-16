@@ -1,11 +1,17 @@
 <script type="ts">
     import { onMount, afterUpdate } from 'svelte';
+    import Summary from '../components/Summary.svelte';
+    // import { messages } from '../stores';
+    
+
     // import type { MediaRecorder } from 'types/dom-mediacapture-record';
 
     let apiKey = import.meta.env.VITE_OPENAI_API_KEY;
     let conversationBox : any;
     let mediaRecorder : any;
     let audioChunks : any[] = [];
+    let text : string = "";
+    let isSpeechEnabled = false;
 
     function updateUserInputPlaceholder() {
         userInputPlaceholder = getRandomProcessingMessage();
@@ -185,6 +191,7 @@
     }
 
     async function interactWithAI() {
+
         isProcessing = true;
         currentProcessingMessage = getRandomProcessingMessage();
 
@@ -202,7 +209,15 @@
             const data = await response.json();
 
             if (data.choices && data.choices[0] && data.choices[0].message) {
+                // Til tale...
+                const assistantResponse = data.choices[0].message.content;
+                // Oppdaterer messages-listen
                 messages = [...messages, {role: data.choices[0].message.role, content: data.choices[0].message.content}];
+                
+                // Til tale, men kun hvis tale er aktivert…
+                if (isSpeechEnabled) {
+                    textToSpeech(assistantResponse);
+                }
             } else {
                 messages.push({role: "assistant", content: "Beklager, jeg fulgte ikke med. Kan du gjenta?"});
             }
@@ -214,6 +229,7 @@
         // Clear the userInput after the response has been handled
         userInput = '';
         isProcessing = false;
+        
     }
 
 
@@ -222,6 +238,45 @@
             conversationBox.scrollTop = conversationBox.scrollHeight;
         }
     });
+
+    // TTS testing:
+    async function textToSpeech(text) {
+        const TTS_ENDPOINT = "https://api.openai.com/v1/audio/speech";
+            try {
+                const response = await fetch(TTS_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        "Authorization": `Bearer ${apiKey}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        model: "tts-1", // or "tts-1-hd"
+                        input: text,
+                        voice: "nova", // you can choose other voices like echo, fable, etc.
+                        // voice: "calloy, echo, fable, onyx, nova, and shimmer",
+                        // Previews of the voices are available in the
+                        // https://platform.openai.com/docs/guides/text-to-speech/voice-options
+                        response_format: "mp3" // or other formats like opus, aac, flac
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const audioData = await response.blob();
+                playAudioBlob(audioData);
+            } catch (error) {
+                console.error('Error in TTS conversion:', error);
+            }
+        }
+
+        function playAudioBlob(audioBlob) {
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const audio = new Audio(audioUrl);
+            audio.play();
+        }
+
 
 </script>
 
@@ -249,18 +304,27 @@
         on:blur={updateUserInputPlaceholder}
         on:keydown={handleUserMessageKeydown}
     ></textarea>
+    <div class="summary">
+        <Summary />
+    </div>
     <div class="buttons">
-        <button class="send" on:click={interactWithAI} disabled={isProcessing}>
-            {isProcessing ? "Sender..." : "Send melding"}
-        </button>
         <button class="record" on:mousedown={startRecording} on:mouseup={stopRecording}>
             {isRecording ? "Lytter… bare snakk." : "Hold for å snakke"}
         </button>
+        <button class="send" on:click={interactWithAI} disabled={isProcessing}>
+            {isProcessing ? "Sender..." : "Send melding"}
+        </button>
     </div>
-
+    <div class="speech">
+        <label>
+            <input type="checkbox" bind:checked={isSpeechEnabled}>
+            Jeg vil at du skal snakke høyt!
+        </label>
+    </div>
 </div>
 
 <style>
+
  
     .system-message-box, .interaction-box {
         padding: 2em;
@@ -334,6 +398,16 @@
         align-self: flex-start;
         clear: none;
     }
+    .speech {
+        margin-top: 1em;
+        text-align: center;
+
+    }
+    .summary {
+        margin: 1em auto;
+        text-align: justify;
+    }
+
     button:disabled {
         opacity: 0.5;
         cursor: not-allowed;
