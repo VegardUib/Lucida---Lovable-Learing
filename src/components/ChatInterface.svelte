@@ -1,8 +1,7 @@
 <script type="ts">
-    import { onMount, afterUpdate } from 'svelte';
+    import { onMount, afterUpdate, onDestroy } from 'svelte';
     import Summary from '../components/Summary.svelte';
     // import { messages } from '../stores';
-    
 
     // import type { MediaRecorder } from 'types/dom-mediacapture-record';
 
@@ -91,6 +90,7 @@
         }
         
         mediaRecorder.stop();
+        isRecording = false;
 
         
         // No need to change isRecording here; it will be set in the onstop handler
@@ -122,10 +122,10 @@
                         
             console.log("Whisper API response:", data, data.text);
             if (transcribedText && transcribedText.trim() !== "") {
+                // Obs! Denne oppdaterer tekstfeltet når det egentlig ikke skal.
+                // samme variabel for user input og placeholder.
                 userInput = transcribedText;
                 console.log("Transcribed Text:", transcribedText);
-                isRecording = false;
-                isProcessing = true;
                 interactWithAI();
             } else {
                 console.warn("User input is empty or undefined after transcription.");
@@ -158,20 +158,18 @@
     }
 
     async function startRecordingForFiveSeconds() {
-        isProcessing = true;
         try {
             await startRecording();
             setTimeout(() => {
             if (mediaRecorder && mediaRecorder.state === 'recording') {
                 stopRecording();
             } else {
-                console.log('Recorder was not in a recording state.');
-                isProcessing = false;
+                console.log('Noe gikk galt med innspillingen...');
+                console.log(mediaRecorder, mediaRecorder.state);
             }
             }, 5000);
         } catch (error) {
-            console.error('Error during recording setup:', error);
-            isProcessing = false;
+            console.error('Jeg fikk ikke til å spille inn:', error);
         }
     }
 
@@ -213,22 +211,29 @@
                 const assistantResponse = data.choices[0].message.content;
                 // Oppdaterer messages-listen
                 messages = [...messages, {role: data.choices[0].message.role, content: data.choices[0].message.content}];
-                
+                userInput = '';
+
                 // Til tale, men kun hvis tale er aktivert…
                 if (isSpeechEnabled) {
                     textToSpeech(assistantResponse);
                 }
+            
             } else {
                 messages.push({role: "assistant", content: "Beklager, jeg fulgte ikke med. Kan du gjenta?"});
             }
         } catch (error) {
             console.error("Error interacting with OpenAI:", error);
             messages.push({role: "assistant", content: "Det oppsto en feil. Dan du prøve igjen seinere?"});
+        }  finally {
+            isRecording = false;
+            isProcessing = false;
+            userInputPlaceholder = getRandomProcessingMessage();
+
         }
         
         // Clear the userInput after the response has been handled
-        userInput = '';
-        isProcessing = false;
+        // isProcessing = false;
+        // userInput = '';
         
     }
 
@@ -236,6 +241,7 @@
     afterUpdate(() => {
         if (conversationBox.scrollTop < conversationBox.scrollHeight - conversationBox.clientHeight) {
             conversationBox.scrollTop = conversationBox.scrollHeight;
+
         }
     });
 
@@ -271,23 +277,25 @@
             }
         }
 
+        let audioUrls = [];
+
         function playAudioBlob(audioBlob) {
             const audioUrl = URL.createObjectURL(audioBlob);
+            audioUrls.push(audioUrl);
             const audio = new Audio(audioUrl);
             audio.play();
         }
 
+        function cleanupAudio() {
+            audioUrls.forEach(url => URL.revokeObjectURL(url));
+            audioUrls = [];
+        }
+
+        onDestroy(() => {
+            cleanupAudio();
+        });
 
 </script>
-
-<div class="system-message-box">
-    <label for="system-message">Set System Message:</label>
-    <textarea 
-        bind:value={systemMessage} 
-        placeholder={isProcessing ? currentProcessingMessage : "Skriv system-instrukser her..."} 
-        on:keydown={handleSystemMessageKeydown}></textarea>
-    <button on:click={() => messages[0].content = systemMessage}>Set Message</button>
-</div>
 
 <div class="interaction-box">
     <div class="conversation" bind:this={conversationBox}>
@@ -299,10 +307,11 @@
     </div>
     
     <textarea 
-        bind:value={userInput} 
+        bind:value={userInput}
         placeholder= {isProcessing ? currentProcessingMessage : "Du kan skrive her..."}
         on:blur={updateUserInputPlaceholder}
         on:keydown={handleUserMessageKeydown}
+        
     ></textarea>
     <div class="summary">
         <Summary />
@@ -321,7 +330,17 @@
             Jeg vil at du skal snakke høyt!
         </label>
     </div>
+    
 </div>
+<div class="system-message-box">
+    <label for="system-message">Set System Message:</label>
+    <textarea 
+        bind:value={systemMessage} 
+        placeholder={isProcessing ? currentProcessingMessage : "Skriv system-instrukser her..."} 
+        on:keydown={handleSystemMessageKeydown}></textarea>
+    <button on:click={() => messages[0].content = systemMessage}>Set Message</button>
+</div>
+
 
 <style>
 
