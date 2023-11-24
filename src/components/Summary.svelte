@@ -1,13 +1,8 @@
 <script>
-    import { onMount } from 'svelte';
-    import { messages } from '../stores.js';
-
+    import { messages, isProcessing, summary } from '../stores.js';
     let selectedFile;
-    let summary = '';
-    let isProcessing = false;
     let apiKey = import.meta.env.VITE_OPENAI_API_KEY;
 
-    // Function to handle file selection
     function handleFileChange(event) {
         selectedFile = event.target.files[0];
         if (selectedFile) {
@@ -15,19 +10,20 @@
         }
     }
 
-    // Function to read and summarize the file
     async function summarizeFile(file) {
-        isProcessing = true;
+        isProcessing.set(true);
         const text = await readFile(file);
-        summary = await getSummary(text);
-        messages.update(currentMessages => {
-            return [...currentMessages, {role: "system", content: `Summary: ${summary}`}];
-        });
-        // messages = [...messages, {role: "system", content: `Summary: ${summary}`}];
-        isProcessing = false;
+        const summaryText = await getSummary(text);
+        
+        if (summaryText) {
+            messages.update(currentMessages => {
+                return [...currentMessages, {role: "system", content: `Her er et sammendrag av teksten du lastet opp: ${summaryText}`}];
+            });
+        }
+        summary.set(summaryText);
+        isProcessing.set(false);
     }
 
-    // Function to read the file
     function readFile(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -37,7 +33,6 @@
         });
     }
 
-    // Function to get summary from GPT (needs implementation)
     async function getSummary(textToSummarize) {
         const endpoint = "https://api.openai.com/v1/chat/completions";
         const body = {
@@ -69,20 +64,22 @@
             return data.choices[0].message.content.trim();
         } catch (error) {
             console.error("Error in summarization:", error);
-            return "An error occurred while summarizing.";
+            return null; // Return null if there is an error
         }
-}
+    }
 </script>
 
 <div>
-    <input type="file" accept=".txt, .html" on:change={handleFileChange} />
-    {#if isProcessing}
-        <p>Processing...</p>
+    <input type="file" accept=".txt, .html, .pdf, docx" on:change={handleFileChange} />
+    {#if $isProcessing}
+        <p>Jobber...</p>
     {:else}
-        {#if summary}
-            <div class="summary">
-                <p>{summary}</p>
-            </div>
-        {/if}
+        {#each $messages as message}
+            {#if message.role === 'system'}
+                <div class="summary">
+                    <p>{message.content}</p>
+                </div>
+            {/if}
+        {/each}
     {/if}
 </div>

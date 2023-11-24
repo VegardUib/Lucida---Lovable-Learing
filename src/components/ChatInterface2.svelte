@@ -1,7 +1,8 @@
 <script type="ts">
     import { onMount, afterUpdate, onDestroy } from 'svelte';
     import Summary from '../components/Summary.svelte';
-    // import { messages } from '../stores';
+    import { summary } from '../stores';
+
 
     // import type { MediaRecorder } from 'types/dom-mediacapture-record';
 
@@ -18,10 +19,14 @@
 
     onMount(async () => {
         updateUserInputPlaceholder();
-        // Uncomment the following line if you want to request permissions on mount
-        // but keep in mind this might not work as expected due to browser security restrictions.
         await navigator.mediaDevices.getUserMedia({ audio: true });
         window.addEventListener('keydown', handleKeyDown);
+        summary.subscribe(value => {
+            if (value) {
+                messages = [...messages, {role: "assistant", content: `Summary: ${value}`}];
+                messages = messages;
+            }
+        });
     });
 
     let userInputPlaceholder = "Du kan skrive her...";
@@ -248,7 +253,7 @@
         }
     });
 
-    // TTS testing:
+    // Text to speech
     async function textToSpeech(text: any) {
         const TTS_ENDPOINT = "https://api.openai.com/v1/audio/speech";
             try {
@@ -305,15 +310,20 @@
         $: if (isProcessing) {
             textArea?.blur(); // Blur the textarea if isProcessing is true
         }
-        
 
+        
 </script>
 
 <div class="interaction-box">
     <div class="conversation" bind:this={conversationBox}>
-        {#each messages as message}
+        {#each $messages as message}
             <div class="{message.role} message">
                 <strong>{message.role}:</strong> {message.content}
+                {#if $summary}
+                    <p>{$summary}</p>
+                {:else}
+                    <p>No summary available yet.</p>
+                {/if}
             </div>
         {/each}
     </div>
