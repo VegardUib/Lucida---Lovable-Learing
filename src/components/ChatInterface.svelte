@@ -1,4 +1,5 @@
 <script type="ts">
+    // imports…
     import { onMount, afterUpdate, onDestroy } from 'svelte';
     import Summary from '../components/Summary.svelte';
     // import { messages } from '../stores';
